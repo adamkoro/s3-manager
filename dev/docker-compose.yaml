@@ -1,0 +1,30 @@
+name: s3-manager
+
+volumes:
+  keycloak:
+  mysql:
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      KC_LOG_LEVEL: info
+    volumes:
+      - keycloak:/opt/keycloak/data
+    command: start-dev
+    ports:
+      - "8085:8080"
+  mysql:
+    image: mysql:8.4.3
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: s3_manager
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+    volumes:
+      - mysql:/var/lib/mysql
+    ports:
+      - "3306:3306"
