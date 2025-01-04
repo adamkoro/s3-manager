@@ -5,7 +5,27 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
 
-    <include file="./1-create-user-entity.xml" relativeToChangelogFile="true"/>
-    <include file="./2-create-s3-endpoint-entity.xml" relativeToChangelogFile="true"/>
+    <changeSet id="master" author="koronics.adam">
+        <createTable tableName="s3_endpoint">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_s3_endpoint"/>
+            </column>
+            <column name="endpoint_url" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="access_key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="secret_key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bucket_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
 
 </databaseChangeLog>

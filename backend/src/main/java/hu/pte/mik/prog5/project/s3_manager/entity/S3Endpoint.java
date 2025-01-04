@@ -18,8 +18,6 @@ public class S3Endpoint {
     private String endpointUrl;
     private String accessKey;
     private String secretKey;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User owner;
+    private String bucketName;
+    private String owner;
 }
