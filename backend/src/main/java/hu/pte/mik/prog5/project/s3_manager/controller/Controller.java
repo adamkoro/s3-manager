@@ -9,8 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -28,19 +30,16 @@ public class Controller {
     }
 
 
-//    @PostMapping
-//    public ResponseEntity<S3Endpoint> createS3Endpoint(@Validated @RequestBody S3Endpoint s3Endpoint) {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        String username = authentication.getName();
-//
-//        User user = userRepository.findByName(username)
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//        s3Endpoint.setOwner(user);
-//        S3Endpoint savedEndpoint = s3EndpointRepository.save(s3Endpoint);
-//
-//        return ResponseEntity.ok(savedEndpoint);
-//    }
+    @PostMapping
+    public ResponseEntity<S3Endpoint> createS3Endpoint(@Validated @RequestBody S3Endpoint s3Endpoint, Principal principal) {
+        String username = principal.getName();
+
+        s3Endpoint.setOwner(username);
+
+        S3Endpoint savedEndpoint = s3EndpointRepository.save(s3Endpoint);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedEndpoint);
+    }
 
     @GetMapping
     public ResponseEntity<List<S3Endpoint>> getAllS3Endpoints(){
