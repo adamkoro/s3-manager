@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "s3-manager",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
