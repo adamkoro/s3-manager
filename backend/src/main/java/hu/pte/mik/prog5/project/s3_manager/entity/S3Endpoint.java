@@ -19,5 +19,6 @@ public class S3Endpoint {
     private String accessKey;
     private String secretKey;
     private String bucketName;
+    private String region;
     private String owner;
 }
