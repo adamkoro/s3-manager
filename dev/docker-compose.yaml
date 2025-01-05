@@ -3,6 +3,7 @@ name: s3-manager
 volumes:
   keycloak:
   mysql:
+  minio:
 
 services:
   keycloak:
@@ -28,3 +29,14 @@ services:
       - mysql:/var/lib/mysql
     ports:
       - "3306:3306"
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-12-13T22-19-12Z
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio:/data
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio12345
