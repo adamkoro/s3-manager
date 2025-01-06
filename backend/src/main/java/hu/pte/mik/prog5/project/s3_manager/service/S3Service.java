@@ -95,7 +95,6 @@ public class S3Service {
         }
     }
 
-
     private AmazonS3 createAmazonS3Client(S3Endpoint endpoint) {
         BasicAWSCredentials awsCredentials = new BasicAWSCredentials(endpoint.getAccessKey(), endpoint.getSecretKey());
 
@@ -117,7 +116,11 @@ public class S3Service {
     }
 
     private File convertMultiPartToFile(MultipartFile file) throws IOException {
-        File convertedFile = new File(file.getOriginalFilename());
+        File tempDirectory = new File("/tmp/upload");
+        if (!tempDirectory.exists()) {
+            tempDirectory.mkdirs();
+        }
+        File convertedFile = new File(tempDirectory, file.getOriginalFilename());
         try (FileOutputStream fos = new FileOutputStream(convertedFile)) {
             fos.write(file.getBytes());
         }
