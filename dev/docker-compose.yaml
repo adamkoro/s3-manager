@@ -3,7 +3,8 @@ name: s3-manager
 volumes:
   keycloak:
   mysql:
-  minio:
+  minio1:
+  minio2:
 
 services:
   keycloak:
@@ -29,14 +30,39 @@ services:
       - mysql:/var/lib/mysql
     ports:
       - "3306:3306"
-  minio:
+  minio1:
     image: quay.io/minio/minio:RELEASE.2024-12-13T22-19-12Z
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - minio:/data
+      - minio1:/data
     command: server /data --console-address ":9001"
     environment:
       - MINIO_ROOT_USER=minio
       - MINIO_ROOT_PASSWORD=minio12345
+  minio2:
+    image: quay.io/minio/minio:RELEASE.2024-12-13T22-19-12Z
+    ports:
+      - "9005:9000"
+      - "9006:9001"
+    volumes:
+      - minio2:/data
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio12345
+  createbuckets:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      - minio1
+      - minio2
+    entrypoint: >
+      /bin/sh -c "
+      sleep 15 && 
+      /usr/bin/mc alias set minio1 http://minio1:9000 minio minio12345 && 
+      /usr/bin/mc alias set minio2 http://minio2:9000 minio minio12345 && 
+      /usr/bin/mc mb minio1/bucket1 && 
+      /usr/bin/mc mb minio2/bucket2 && 
+      exit 0;
+      "
