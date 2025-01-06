@@ -12,7 +12,6 @@
             <label
               class="
                 focus:outline-none
-                focus-visible:outline-0
                 disabled:cursor-not-allowed
                 disabled:opacity-75
                 aria-disabled:cursor-not-allowed
