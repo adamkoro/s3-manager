@@ -1,6 +1,6 @@
 <template>
   <header
-      class="header sticky top-0 bg-gray-200 shadow-md flex items-center justify-between px-4 mb-5 rounded z-10">
+      class="header sticky top-0 bg-white shadow-md flex items-center justify-between px-4 mb-5 rounded z-10">
       <h1 class="w-1/3">
           <div class="flex items-center gap-1 cursor-pointer">
             <UIcon name="i-heroicons-circle-stack-20-solid"/>
