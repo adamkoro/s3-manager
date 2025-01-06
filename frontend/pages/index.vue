@@ -145,6 +145,7 @@ async function addS3Storage() {
   if (data.value) {
     pending.value = false
     isAddOpen.value = false
+    isDeleteOpen.value = false
     url.value = ''
     accessKey.value = ''
     secretKey.value = ''
@@ -173,6 +174,7 @@ async function deleteS3Storage(storageId: string) {
 
 const fetchS3Storages = async () => {
   pending.value = true
+  isDeleteOpen.value = false
   await waitForAuthentication()
   
   const response = await $fetch(config.public.apiUrl + '/api/s3', {
