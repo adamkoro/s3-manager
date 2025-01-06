@@ -11,22 +11,23 @@ services:
     image: adamkoro/s3-manager-backend:latest
     restart: unless-stopped
     environment:
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/s3-manager
-      DATASOURCE_URL: jdbc:mysql://mysql:3306/s3_manager
-      DATASOURCE_USERNAME: user
-      DATASOURCE_PASSWORD: user
-      MAX_FILE_SIZE: 10000MB
-      MAX_REQUEST_SIZE: 10000MB
+      SPRING_JPA_OPEN_IN_VIEW: "false"
+      KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/s3-manager"
+      DATASOURCE_URL: "jdbc:mysql://mysql:3306/s3_manager"
+      DATASOURCE_USERNAME: "user"
+      DATASOURCE_PASSWORD: "user"
+      MAX_FILE_SIZE: "10000MB"
+      MAX_REQUEST_SIZE: "10000MB"
     ports:
       - 8080:8080/tcp
   frontend:
     image: adamkoro/s3-manager-frontend:latest
     restart: unless-stopped
     environment:
-      NUXT_PUBLIC_API_URL: http://localhost:8080
-      NUXT_PUBLIC_KEYCLOAK_URL: http://localhost:8085
-      NUXT_PUBLIC_KEYCLOAK_REALM: s3-manager
-      NUXT_PUBLIC_KEYCLOAK_CLIEND_ID: s3manager
+      NUXT_PUBLIC_API_URL: "http://localhost:8080"
+      NUXT_PUBLIC_KEYCLOAK_URL: "http://localhost:8085"
+      NUXT_PUBLIC_KEYCLOAK_REALM: "s3-manager"
+      NUXT_PUBLIC_KEYCLOAK_CLIEND_ID: "s3manager"
     ports:
       - 3000:3000/tcp
   keycloak:
