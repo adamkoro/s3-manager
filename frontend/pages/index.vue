@@ -17,7 +17,7 @@
                       <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
                         Add S3 Storage
                       </h3>
-                      <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isAddOpen = false" />
+                      <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isAddOpen = false; cleanFormValues()" />
                     </div>
                   </template>
                   <form @submit.prevent="addS3Storage" class="space-y-4 p-4 sm:p-6">
@@ -29,7 +29,7 @@
                   </form>
                   <template #footer>
                       <div class="flex justify-between">
-                        <UButton type="cancel" size="xl" label="Cancel" @click="(isAddOpen = false)">
+                        <UButton type="cancel" size="xl" label="Cancel" @click="isAddOpen = false; cleanFormValues()">
                           <template #trailing>
                             <UIcon name="i-heroicons-no-symbol-20-solid" />
                           </template>
@@ -66,7 +66,7 @@
                           <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
                             Edit S3 Storage
                           </h3>
-                          <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isEditOpen = false" />
+                          <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isEditOpen = false; cleanFormValues()" />
                         </div>
                       </template>
                       <form @submit.prevent="updateS3Storage(storage.id)" class="space-y-4 p-4 sm:p-6">
@@ -78,7 +78,7 @@
                       </form>
                       <template #footer>
                         <div class="flex justify-between">
-                          <UButton type="cancel" size="xl" label="Cancel" @click="(isEditOpen = false)">
+                          <UButton type="cancel" size="xl" label="Cancel" @click="isEditOpen = false; cleanFormValues()">
                             <template #trailing>
                               <UIcon name="i-heroicons-no-symbol-20-solid" />
                             </template>
@@ -167,7 +167,16 @@ export interface S3Storage {
   region: string;
 }
 
+function cleanFormValues() {
+  url.value = ''
+  accessKey.value = ''
+  secretKey.value = ''
+  bucket.value = ''
+  region.value = ''
+}
+
 async function openEditModal(id: string) {
+  cleanFormValues()
   const storage = s3Storages.value.find(s => s.id === id)
   if (storage) {
     url.value = storage.endpointUrl
@@ -175,11 +184,12 @@ async function openEditModal(id: string) {
     secretKey.value = storage.secretKey
     bucket.value = storage.bucketName
     region.value = storage.region
+    isEditOpen.value = true
   }
-  isEditOpen.value = true
 }
 
 async function addS3Storage() {
+  cleanFormValues()
   pending.value = true
   const { data, error } = await useFetch(useRuntimeConfig().public.apiUrl + '/api/s3', {
     method: 'POST',
@@ -200,11 +210,7 @@ async function addS3Storage() {
     pending.value = false
     isAddOpen.value = false
     isDeleteOpen.value = false
-    url.value = ''
-    accessKey.value = ''
-    secretKey.value = ''
-    bucket.value = ''
-    region.value = ''
+    cleanFormValues()
     fetchS3Storages()
     toast.add({ title: 'S3 storage successfully created', description: data.value.endpointUrl, icon: 'i-heroicons-check-circle-20-solid' })
   }
@@ -234,11 +240,7 @@ async function updateS3Storage(storageId: string) {
 
   await fetchS3Storages()
   isEditOpen.value = false
-  url.value = ''
-  accessKey.value = ''
-  secretKey.value = ''
-  bucket.value = ''
-  region.value = ''
+  cleanFormValues()
   pending.value = false
 }
 
