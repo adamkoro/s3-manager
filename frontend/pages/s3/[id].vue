@@ -38,7 +38,8 @@
               ">
               <UIcon name="i-heroicons-arrow-up-tray-20-solid" class="text-xl"/>
               <span>Upload</span>
-              <UInput type="file" ref="fileInput" class="absolute opacity-0 w-full h-full cursor-pointer" @change="uploadFile" />
+              <input type="file" ref="fileInput" class="absolute opacity-0 w-full h-full cursor-pointer" @change="uploadFile"
+              />
             </label>
           </UTooltip>
         </div>
@@ -188,9 +189,14 @@ const deleteFile = async (filename: string) => {
   toast.add({ title: 'File successfully deleted', description: data.value, icon: 'i-heroicons-check-circle-20-solid' })
 }
 
+
 const uploadFile = async () => {
-  const file = fileInput.value?.files?.[0]
-  if (!file) return
+  const file = fileInput.value?.files?.[0];
+  if (!file) {
+    console.log('No file selected or fileInput is empty');
+    return;
+  }
+  //console.log('Selected file:', file);
 
   uploading.value = true
   try {
@@ -202,7 +208,6 @@ const uploadFile = async () => {
       body: formData,
       headers: {
         ...getHeaders(),
-        'Content-Type': 'multipart/form-data'
       },
       credentials: 'include',
     })
@@ -219,7 +224,7 @@ const uploadFile = async () => {
   } finally {
     uploading.value = false
     if (fileInput.value) {
-      fileInput.value.value = '' // Reset the input value
+      fileInput.value.value = ''
     }
   }
 }
