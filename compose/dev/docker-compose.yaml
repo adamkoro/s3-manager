@@ -1,4 +1,4 @@
-name: s3-manager
+name: s3-manager-dev
 
 volumes:
   keycloak:

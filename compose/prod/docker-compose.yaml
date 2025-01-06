@@ -1,0 +1,94 @@
+name: s3-manager
+
+volumes:
+  keycloak:
+  mysql:
+  minio1:
+  minio2:
+
+services:
+  backend:
+    image: adamkoro/s3-manager-backend:latest
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/s3-manager
+      DATASOURCE_URL: jdbc:mysql://mysql:3306/s3_manager
+      DATASOURCE_USERNAME: user
+      DATASOURCE_PASSWORD: user
+      MAX_FILE_SIZE: 10000MB
+      MAX_REQUEST_SIZE: 10000MB
+    ports:
+      - 8080:8080/tcp
+  frontend:
+    image: adamkoro/s3-manager-frontend:latest
+    restart: unless-stopped
+    environment:
+      NUXT_PUBLIC_API_URL: http://localhost:8080
+      NUXT_PUBLIC_KEYCLOAK_URL: http://localhost:8085
+      NUXT_PUBLIC_KEYCLOAK_REALM: s3-manager
+      NUXT_PUBLIC_KEYCLOAK_CLIEND_ID: s3manager
+    ports:
+      - 3000:3000/tcp
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      KC_LOG_LEVEL: info
+    volumes:
+      - keycloak:/opt/keycloak/data
+    command: start-dev
+    ports:
+      - "8085:8080"
+  mysql:
+    image: mysql:8.4.3
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: s3_manager
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+    volumes:
+      - mysql:/var/lib/mysql
+    ports:
+      - "3306:3306"
+  minio1:
+    image: quay.io/minio/minio:RELEASE.2024-12-13T22-19-12Z
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio1:/data
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio12345
+  minio2:
+    image: quay.io/minio/minio:RELEASE.2024-12-13T22-19-12Z
+    restart: unless-stopped
+    ports:
+      - "9005:9000"
+      - "9006:9001"
+    volumes:
+      - minio2:/data
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio12345
+  create_buckets:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      - minio1
+      - minio2
+    entrypoint: >
+      /bin/sh -c "
+      sleep 30 && 
+      /usr/bin/mc alias set minio1 http://minio1:9000 minio minio12345 && 
+      /usr/bin/mc alias set minio2 http://minio2:9000 minio minio12345 && 
+      /usr/bin/mc mb minio1/bucket1 && 
+      /usr/bin/mc mb minio2/bucket2 && 
+      exit 0;
+      "
