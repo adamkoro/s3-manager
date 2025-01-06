@@ -1,6 +1,6 @@
 # S3 Manager
 
-S3 Manager is a web application for managing files in Amazon S3 buckets. It provides an intuitive user interface to upload, download, and delete files, as well as manage bucket permissions and settings.
+S3 Manager is a web application for managing files in Amazon S3 or other S3 compatible buckets. It provides a user interface to upload, download, and delete files. You can add S3 endpoints via web ui
 
 ## Features
 - Upload files to S3 buckets
