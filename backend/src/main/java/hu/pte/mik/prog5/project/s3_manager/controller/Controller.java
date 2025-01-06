@@ -86,6 +86,30 @@ public class Controller {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<S3Endpoint> updateS3Storage(@PathVariable Long id, @RequestBody S3Endpoint updatedStorage, Principal principal) {
+        try {
+            Optional<S3Endpoint> existingStorage = s3EndpointRepository.findById(id);
+            if (existingStorage.isEmpty()) {
+                log.info("S3 storage not found with id: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+            S3Endpoint storage = existingStorage.get();
+            storage.setEndpointUrl(updatedStorage.getEndpointUrl());
+            storage.setAccessKey(updatedStorage.getAccessKey());
+            storage.setSecretKey(updatedStorage.getSecretKey());
+            storage.setBucketName(updatedStorage.getBucketName());
+            storage.setRegion(updatedStorage.getRegion());
+            storage.setOwner(principal.getName());
+            S3Endpoint savedStorage = s3EndpointRepository.save(storage);
+            log.info("Updated s3 endpoint with id: {}", id);
+            return ResponseEntity.ok(savedStorage);
+        } catch (Exception e) {
+            log.error("Error updating S3 storage with id {}: {}", id, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @PostMapping("/{id}/upload")
     public ResponseEntity<String> uploadFile(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         try {

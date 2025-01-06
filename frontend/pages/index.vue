@@ -57,8 +57,44 @@
                 <UTooltip text="Browse storage">
                   <UButton type="submit" size="xl" :label="storage.endpointUrl" @click="router.push(`/s3/${storage.id}`)" />
                 </UTooltip>
+                <UTooltip text="Edit storage">
+                  <UButton icon="i-heroicons-pencil-20-solid" @click="openEditModal(storage.id)"/>
+                  <UModal v-model="isEditOpen" prevent-close>
+                    <UCard>
+                      <template #header>
+                        <div class="flex items-center justify-between">
+                          <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
+                            Edit S3 Storage
+                          </h3>
+                          <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isEditOpen = false" />
+                        </div>
+                      </template>
+                      <form @submit.prevent="updateS3Storage(storage.id)" class="space-y-4 p-4 sm:p-6">
+                        <UInput v-model="url" label="URL" placeholder="Enter S3 endpoint URL" required />
+                        <UInput v-model="accessKey" label="Access Key" placeholder="Enter access key" type="password" required />
+                        <UInput v-model="secretKey" label="Secret Key" placeholder="Enter secret key" type="password" required />
+                        <UInput v-model="bucket" label="Bucket" placeholder="Enter bucket" required />
+                        <UInput v-model="region" label="Region" placeholder="Enter region" />
+                      </form>
+                      <template #footer>
+                        <div class="flex justify-between">
+                          <UButton type="cancel" size="xl" label="Cancel" @click="(isEditOpen = false)">
+                            <template #trailing>
+                              <UIcon name="i-heroicons-no-symbol-20-solid" />
+                            </template>
+                          </UButton>
+                          <UButton type="submit" size="xl" label="Update" @click="updateS3Storage(storage.id)">
+                            <template #trailing>
+                              <UIcon name="i-heroicons-check-20-solid" />
+                            </template>
+                          </UButton>
+                        </div>
+                      </template>
+                    </UCard>
+                  </UModal>
+                </UTooltip>
                 <UTooltip text="Delete storage">
-                  <UButton type="submit" icon="i-heroicons-trash-20-solid" color="red" @click="(isDeleteOpen = true) && (deleteSelectedStorage = storage.endpointUrl)" />
+                  <UButton type="submit" icon="i-heroicons-trash-20-solid" color="red" @click="(isDeleteOpen = true)" />
                   <UModal v-model="isDeleteOpen">
                     <UCard :ui="{ divide: 'divide-y divide-gray-100' }">
                       <template #header>
@@ -67,18 +103,18 @@
                             Delete S3 Storage
                           </h3>
                           <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
-                            @click="(isDeleteOpen = false) && (deleteSelectedStorage = '')" />
+                            @click="(isDeleteOpen = false) && (storage.endpointUrl = '')" />
                         </div>
                       </template>
-                      <div v-if="deleteSelectedStorage" class="flex flex-wrap gap-1">
+                      <div v-if="storage.endpointUrl" class="flex flex-wrap gap-1">
                         <div class="">Are you sure you want to delete</div>
-                        <div class="text-red-600">{{ deleteSelectedStorage }}</div>
+                        <div class="text-red-600">{{ storage.endpointUrl }}</div>
                         <div>?</div>
                       </div>
                       <template #footer>
                         <div class="flex justify-between">
                           <UButton type="cancel" size="xl" label="Cancel"
-                            @click="(isDeleteOpen = false) && (deleteSelectedStorage = '')">
+                            @click="(isDeleteOpen = false) && (storage.endpointUrl = '')">
                             <template #trailing>
                               <UIcon name="i-heroicons-no-symbol-20-solid" />
                             </template>
@@ -115,7 +151,7 @@ const pending = ref(true)
 const error = ref(null)
 const isAddOpen = ref(false)
 const isDeleteOpen = ref(false)
-const deleteSelectedStorage = ref('')
+const isEditOpen = ref(false)
 const url = ref('')
 const accessKey = ref('')
 const secretKey = ref('')
@@ -131,11 +167,29 @@ export interface S3Storage {
   region: string;
 }
 
+async function openEditModal(id: string) {
+  const storage = s3Storages.value.find(s => s.id === id)
+  if (storage) {
+    url.value = storage.endpointUrl
+    accessKey.value = storage.accessKey
+    secretKey.value = storage.secretKey
+    bucket.value = storage.bucketName
+    region.value = storage.region
+  }
+  isEditOpen.value = true
+}
+
 async function addS3Storage() {
   pending.value = true
   const { data, error } = await useFetch(useRuntimeConfig().public.apiUrl + '/api/s3', {
     method: 'POST',
-    body: JSON.stringify({ endpointUrl: url.value, accessKey: accessKey.value, secretKey: secretKey.value, bucketName: bucket.value, region: region.value }),
+    body: JSON.stringify({ 
+      endpointUrl: url.value, 
+      accessKey: accessKey.value, 
+      secretKey: secretKey.value, 
+      bucketName: bucket.value, 
+      region: region.value 
+    }),
     headers: getHeaders(),
     credentials: 'include',
   })
@@ -154,6 +208,38 @@ async function addS3Storage() {
     fetchS3Storages()
     toast.add({ title: 'S3 storage successfully created', description: data.value.endpointUrl, icon: 'i-heroicons-check-circle-20-solid' })
   }
+}
+
+async function updateS3Storage(storageId: string) {
+  pending.value = true
+  const { data, error } = await useFetch(config.public.apiUrl + '/api/s3/' + storageId, {
+    method: 'PUT',
+    body: JSON.stringify({
+      endpointUrl: url.value,
+      accessKey: accessKey.value,
+      secretKey: secretKey.value,
+      bucketName: bucket.value,
+      region: region.value
+    }),
+    headers: getHeaders(),
+    credentials: 'include'
+  })
+
+  if (error.value) {
+    toast.add({ title: 'S3 storage update error', description: error.value.data.error || 'An unknown error occurred', icon: 'i-heroicons-no-symbol-20-solid', color:'red' })
+    return
+  }
+
+  toast.add({ title: 'S3 storage successfully updated', description: data.value.endpointUrl, icon: 'i-heroicons-check-circle-20-solid' })
+
+  await fetchS3Storages()
+  isEditOpen.value = false
+  url.value = ''
+  accessKey.value = ''
+  secretKey.value = ''
+  bucket.value = ''
+  region.value = ''
+  pending.value = false
 }
 
 async function deleteS3Storage(storageId: string) {
