@@ -189,7 +189,6 @@ async function openEditModal(id: string) {
 }
 
 async function addS3Storage() {
-  cleanFormValues()
   pending.value = true
   const { data, error } = await useFetch(useRuntimeConfig().public.apiUrl + '/api/s3', {
     method: 'POST',

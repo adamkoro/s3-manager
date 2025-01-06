@@ -51,7 +51,7 @@
         <UIcon name="i-heroicons-arrow-path-20-solid" class="text-gray-500 text-2xl animate-spin" />
         <p class="mt-3 text-sm">Loading...</p>
       </div>
-      <div v-else class="grid grid-cols-1">
+      <div v-else-if="bucketContents && bucketContents.length > 0" class="grid grid-cols-1">
         <div v-for="item in bucketContents" :key="item">
           <div v-if="item.endsWith('/')" class="bg-gray-300 text-black rounded border-2 border-orange-500 p-1 mt-6 shadow-lg">
             {{ item }}
@@ -104,6 +104,10 @@
           </div>
         </div>
       </div>
+      <div v-else class="flex flex-col items-center mt-6">
+          <UIcon name="i-heroicons-circle-stack-20-solid" class="text-gray-500 text-2xl" />
+          <p class="mt-3 text-sm">No files are found.</p>
+        </div>
     </div>
   </UContainer>
 </template>
