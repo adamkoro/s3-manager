@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,21 +60,13 @@ public class S3Service {
     public String uploadFile(Long id, MultipartFile file) throws Exception {
         S3Endpoint endpoint = s3EndpointRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("S3 endpoint not found for id: " + id));
-
         AmazonS3 amazonS3 = createAmazonS3Client(endpoint);
-
         try {
-            // Convert MultipartFile to File
             File convertedFile = convertMultiPartToFile(file);
-            String fileName = generateFileName(file);
-
-            // Upload to S3
+            String fileName = file.getOriginalFilename();
             amazonS3.putObject(new PutObjectRequest(endpoint.getBucketName(), fileName, convertedFile)
                     .withCannedAcl(CannedAccessControlList.PublicRead));
-
-            // Clean up the temporary file
             convertedFile.delete();
-
             return fileName;
         } catch (AmazonServiceException e) {
             throw new Exception("Failed to upload file: " + e.getMessage());
@@ -131,9 +122,5 @@ public class S3Service {
             fos.write(file.getBytes());
         }
         return convertedFile;
-    }
-
-    private String generateFileName(MultipartFile file) {
-        return new Date().getTime() + "-" + file.getOriginalFilename().replace(" ", "_");
     }
 }
