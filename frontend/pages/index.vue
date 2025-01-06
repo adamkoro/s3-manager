@@ -57,11 +57,41 @@
                 <UTooltip text="Browse storage">
                   <UButton type="submit" size="xl" :label="storage.endpointUrl" @click="router.push(`/s3/${storage.id}`)" />
                 </UTooltip>
-                <UTooltip text="Edit storage">
-                  <UButton icon="i-heroicons-pencil-square-20-solid" />
-                </UTooltip>
                 <UTooltip text="Delete storage">
-                  <UButton type="submit" icon="i-heroicons-trash-20-solid" @click="deleteS3Storage(storage.id)" />
+                  <UButton type="submit" icon="i-heroicons-trash-20-solid" color="red" @click="(isDeleteOpen = true) && (deleteSelectedStorage = storage.endpointUrl)" />
+                  <UModal v-model="isDeleteOpen">
+                    <UCard :ui="{ divide: 'divide-y divide-gray-100' }">
+                      <template #header>
+                        <div class="flex items-center justify-between ">
+                          <h3 class="text-base font-semibold leading-6 text-gray-900 ">
+                            Delete S3 Storage
+                          </h3>
+                          <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
+                            @click="(isDeleteOpen = false) && (deleteSelectedStorage = '')" />
+                        </div>
+                      </template>
+                      <div v-if="deleteSelectedStorage" class="flex flex-wrap gap-1">
+                        <div class="">Are you sure you want to delete</div>
+                        <div class="text-red-600">{{ deleteSelectedStorage }}</div>
+                        <div>?</div>
+                      </div>
+                      <template #footer>
+                        <div class="flex justify-between">
+                          <UButton type="cancel" size="xl" label="Cancel"
+                            @click="(isDeleteOpen = false) && (deleteSelectedStorage = '')">
+                            <template #trailing>
+                              <UIcon name="i-heroicons-no-symbol-20-solid" />
+                            </template>
+                          </UButton>
+                          <UButton type="submit" size="xl" label="Delete" color="red" @click="deleteS3Storage(storage.id)">
+                            <template #trailing>
+                              <UIcon name="i-heroicons-trash-20-solid" />
+                            </template>
+                          </UButton>
+                        </div>
+                      </template>
+                    </UCard>
+                  </UModal>
                 </UTooltip>
               </div>
             </div>
@@ -84,6 +114,8 @@ const s3Storages = ref([])
 const pending = ref(true)
 const error = ref(null)
 const isAddOpen = ref(false)
+const isDeleteOpen = ref(false)
+const deleteSelectedStorage = ref('')
 const url = ref('')
 const accessKey = ref('')
 const secretKey = ref('')

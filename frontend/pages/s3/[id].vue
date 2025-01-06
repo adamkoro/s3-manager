@@ -64,7 +64,40 @@
                   <UButton icon="i-heroicons-arrow-down-tray-20-solid" size="sm" color="gray" @click="downloadFile(item)" />
                 </UTooltip>
                 <UTooltip text="Delete file">
-                  <UButton icon="i-heroicons-trash-20-solid" size="sm" color="red" @click="deleteFile(item)" />
+                  <UButton icon="i-heroicons-trash-20-solid" size="sm" color="red" @click="(isDeleteOpen = true) && (deleteSelectedFile = item)" />
+                  <UModal v-model="isDeleteOpen">
+                    <UCard :ui="{ divide: 'divide-y divide-gray-100' }">
+                      <template #header>
+                        <div class="flex items-center justify-between ">
+                          <h3 class="text-base font-semibold leading-6 text-gray-900 ">
+                            Delete file
+                          </h3>
+                          <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
+                            @click="(isDeleteOpen = false) && (deleteSelectedFile = '')" />
+                        </div>
+                      </template>
+                      <div v-if="deleteSelectedFile" class="flex flex-wrap gap-1">
+                        <div class="">Are you sure you want to delete</div>
+                        <div class="text-red-600">{{ deleteSelectedFile }}</div>
+                        <div>?</div>
+                      </div>
+                      <template #footer>
+                        <div class="flex justify-between">
+                          <UButton type="cancel" size="xl" label="Cancel"
+                            @click="(isDeleteOpen = false) && (deleteSelectedFile = '')">
+                            <template #trailing>
+                              <UIcon name="i-heroicons-no-symbol-20-solid" />
+                            </template>
+                          </UButton>
+                          <UButton type="submit" size="xl" label="Delete" color="red" @click="deleteFile(item)">
+                            <template #trailing>
+                              <UIcon name="i-heroicons-trash-20-solid" />
+                            </template>
+                          </UButton>
+                        </div>
+                      </template>
+                    </UCard>
+                  </UModal>
                 </UTooltip>
               </div>
             </div>
@@ -82,12 +115,13 @@ const storageId = route.params.id
 const { getHeaders, waitForAuthentication } = useAuth()
 const toast = useToast()
 const config = useRuntimeConfig()
-
 const bucketContents = ref<string[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
+const isDeleteOpen = ref(false)
+const deleteSelectedFile = ref('')
 
 const fetchBucketContents = async () => {
   loading.value = true
