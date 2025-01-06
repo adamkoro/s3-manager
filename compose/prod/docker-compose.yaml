@@ -34,13 +34,14 @@ services:
     image: quay.io/keycloak/keycloak:26.0.7
     restart: unless-stopped
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: "true"
       KC_LOG_LEVEL: info
     volumes:
       - keycloak:/opt/keycloak/data
-    command: start-dev
+      - ../config/keycloak:/opt/keycloak/data/import
+    command: start-dev --import-realm
     ports:
       - "8085:8080"
   mysql:
