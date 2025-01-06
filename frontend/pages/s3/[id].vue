@@ -89,7 +89,7 @@
                               <UIcon name="i-heroicons-no-symbol-20-solid" />
                             </template>
                           </UButton>
-                          <UButton type="submit" size="xl" label="Delete" color="red" @click="deleteFile(item)">
+                          <UButton type="submit" size="xl" label="Delete" color="red" @click="deleteFile(deleteSelectedFile)">
                             <template #trailing>
                               <UIcon name="i-heroicons-trash-20-solid" />
                             </template>
