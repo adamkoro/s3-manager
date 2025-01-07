@@ -10,7 +10,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
-import hu.pte.mik.prog5.project.s3_manager.Repository.S3EndpointRepository;
+import hu.pte.mik.prog5.project.s3_manager.repository.S3EndpointRepository;
 import hu.pte.mik.prog5.project.s3_manager.entity.S3Endpoint;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,9 @@
 package hu.pte.mik.prog5.project.s3_manager.controller;
 
+import hu.pte.mik.prog5.project.s3_manager.dto.Mapper;
+import hu.pte.mik.prog5.project.s3_manager.dto.S3EndpointDTO;
 import hu.pte.mik.prog5.project.s3_manager.entity.S3Endpoint;
-import hu.pte.mik.prog5.project.s3_manager.Repository.S3EndpointRepository;
+import hu.pte.mik.prog5.project.s3_manager.repository.S3EndpointRepository;
 import hu.pte.mik.prog5.project.s3_manager.service.S3Service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,8 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,35 +25,42 @@ public class Controller {
 
     private final S3EndpointRepository s3EndpointRepository;
     private final S3Service s3Service;
+    private final Mapper s3EndpointMapper;
 
     @Autowired
-    public Controller (S3EndpointRepository s3EndpointRepository) {
+    public Controller(S3EndpointRepository s3EndpointRepository, S3Service s3Service, Mapper s3Mapper) {
         this.s3EndpointRepository = s3EndpointRepository;
-        this.s3Service = new S3Service(s3EndpointRepository);
+        this.s3Service = s3Service;
+        this.s3EndpointMapper = s3Mapper;
     }
 
     @PostMapping
-    public ResponseEntity<S3Endpoint> createS3Endpoint(@Validated @RequestBody S3Endpoint s3Endpoint, Principal principal) {
+    public ResponseEntity<S3EndpointDTO> createS3Endpoint(@Validated @RequestBody S3EndpointDTO s3EndpointDTO, Principal principal) {
         try {
             String username = principal.getName();
+            S3Endpoint s3Endpoint = s3EndpointMapper.mapToEntity(s3EndpointDTO);
             s3Endpoint.setOwner(username);
             S3Endpoint savedEndpoint = s3EndpointRepository.save(s3Endpoint);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedEndpoint);
+            S3EndpointDTO savedDto = s3EndpointMapper.mapToDto(savedEndpoint);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedDto);
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("Error creating S3 endpoint: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
-
     }
 
     @GetMapping
-    public ResponseEntity<List<S3Endpoint>> getAllS3Endpoints(Principal principal){
+    public ResponseEntity<List<S3EndpointDTO>> getAllS3Endpoints(Principal principal) {
         try {
             String username = principal.getName();
             List<S3Endpoint> endpoints = s3EndpointRepository.findByOwner(username);
-            return ResponseEntity.status(HttpStatus.OK).body(endpoints);
+
+            List<S3EndpointDTO> dtoList = endpoints.stream()
+                    .map(s3EndpointMapper::mapToDto)
+                    .toList();
+            return ResponseEntity.status(HttpStatus.OK).body(dtoList);
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("Error retrieving S3 endpoints: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -87,25 +94,24 @@ public class Controller {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<S3Endpoint> updateS3Storage(@PathVariable Long id, @RequestBody S3Endpoint updatedStorage, Principal principal) {
+    public ResponseEntity<S3EndpointDTO> updateS3Endpoint(@PathVariable Long id, @RequestBody S3EndpointDTO updatedDto, Principal principal) {
         try {
-            Optional<S3Endpoint> existingStorage = s3EndpointRepository.findById(id);
-            if (existingStorage.isEmpty()) {
-                log.info("S3 storage not found with id: {}", id);
+            Optional<S3Endpoint> existingOpt = s3EndpointRepository.findById(id);
+            if (existingOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            S3Endpoint storage = existingStorage.get();
-            storage.setEndpointUrl(updatedStorage.getEndpointUrl());
-            storage.setAccessKey(updatedStorage.getAccessKey());
-            storage.setSecretKey(updatedStorage.getSecretKey());
-            storage.setBucketName(updatedStorage.getBucketName());
-            storage.setRegion(updatedStorage.getRegion());
-            storage.setOwner(principal.getName());
-            S3Endpoint savedStorage = s3EndpointRepository.save(storage);
-            log.info("Updated s3 endpoint with id: {}", id);
-            return ResponseEntity.ok(savedStorage);
+            S3Endpoint existing = existingOpt.get();
+            existing.setEndpointUrl(updatedDto.getEndpointUrl());
+            existing.setAccessKey(updatedDto.getAccessKey());
+            existing.setSecretKey(updatedDto.getSecretKey());
+            existing.setBucketName(updatedDto.getBucketName());
+            existing.setRegion(updatedDto.getRegion());
+            existing.setOwner(principal.getName());
+            S3Endpoint saved = s3EndpointRepository.save(existing);
+            S3EndpointDTO savedDto = s3EndpointMapper.mapToDto(saved);
+            return ResponseEntity.ok(savedDto);
         } catch (Exception e) {
-            log.error("Error updating S3 storage with id {}: {}", id, e.getMessage());
+            log.error("Error updating S3 endpoint with id {}: {}", id, e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -114,13 +120,12 @@ public class Controller {
     public ResponseEntity<String> uploadFile(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         try {
             String fileName = s3Service.uploadFile(id, file);
-            log.info("File uploaded: {}, id: {} ", fileName, id );
+            log.info("File uploaded: {}, id: {}", fileName, id);
             return ResponseEntity.ok("File uploaded successfully: " + fileName);
         } catch (IllegalArgumentException e) {
             log.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload file: " + e.getMessage());
         }
@@ -131,16 +136,10 @@ public class Controller {
         try {
             Optional<S3Endpoint> storage = s3EndpointRepository.findById(id);
             if (storage.isEmpty()) {
-                log.info("S3 storage not found with id: {}", id);
-                return ResponseEntity
-                        .status(HttpStatus.NOT_FOUND)
-                        .body("The specified S3 storage does not exist");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("S3 storage not found");
             }
             s3EndpointRepository.delete(storage.get());
-            log.info("Deleted s3 endpoint with id: {}", id);
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body("The specified S3 storage was successfully deleted");
+            return ResponseEntity.ok("S3 storage deleted successfully");
         } catch (Exception e) {
             log.error("Error deleting S3 storage with id {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete S3 storage: " + e.getMessage());
@@ -151,10 +150,9 @@ public class Controller {
     public ResponseEntity<String> deleteFile(@PathVariable Long id, @PathVariable String fileName) {
         try {
             s3Service.deleteFile(id, fileName);
-            log.info("Deleted file on endpoint id: {}, filename: {}", id, fileName);
             return ResponseEntity.ok(fileName + " deleted successfully");
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("Error deleting file {} on endpoint {}: {}", fileName, id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete file: " + e.getMessage());
         }
     }
