@@ -57,6 +57,9 @@
                 <UTooltip text="Browse storage">
                   <UButton type="submit" size="xl" :label="storage.endpointUrl" @click="router.push(`/s3/${storage.id}`)" />
                 </UTooltip>
+                <UTooltip text="Browse bucket">
+                  <UButton type="submit" size="xl" :label="storage.bucketName" @click="router.push(`/s3/${storage.id}`)" />
+                </UTooltip>
                 <UTooltip text="Edit storage">
                   <UButton icon="i-heroicons-pencil-20-solid" @click="openEditModal(storage.id)"/>
                   <UModal v-model="isEditOpen" prevent-close>
