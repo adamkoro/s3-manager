@@ -7,6 +7,8 @@ volumes:
   minio2:
 
 services:
+  # /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin
+  # /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.7
     environment:
@@ -14,6 +16,8 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: "true"
       KC_LOG_LEVEL: info
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
     volumes:
       - keycloak:/opt/keycloak/data
       - ../config/keycloak:/opt/keycloak/data/import
